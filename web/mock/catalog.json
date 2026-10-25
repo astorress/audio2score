@@ -1,0 +1,279 @@
+{
+  "instruments": [
+    {
+      "id": "flute",
+      "name": "Flauta",
+      "family": "woodwinds",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": null,
+      "range": ["C4", "C7"],
+      "monophonic": true
+    },
+    {
+      "id": "oboe",
+      "name": "Oboe",
+      "family": "woodwinds",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": null,
+      "range": ["A#3", "A6"],
+      "monophonic": true
+    },
+    {
+      "id": "clarinet",
+      "name": "Clarinete en Si♭",
+      "family": "woodwinds",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": "M-2",
+      "range": ["D3", "A#6"],
+      "monophonic": true
+    },
+    {
+      "id": "alto_sax",
+      "name": "Saxo alto en Mi♭",
+      "family": "woodwinds",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": "M-6",
+      "range": ["C#3", "G#5"],
+      "monophonic": true
+    },
+    {
+      "id": "bassoon",
+      "name": "Fagot",
+      "family": "woodwinds",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": null,
+      "range": ["A#1", "E5"],
+      "monophonic": true
+    },
+    {
+      "id": "horn",
+      "name": "Corno en Fa",
+      "family": "brass",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": "P-5",
+      "range": ["B1", "F5"],
+      "monophonic": true
+    },
+    {
+      "id": "trumpet",
+      "name": "Trompeta en Si♭",
+      "family": "brass",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": "M-2",
+      "range": ["E3", "C6"],
+      "monophonic": true
+    },
+    {
+      "id": "trombone",
+      "name": "Trombón",
+      "family": "brass",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": null,
+      "range": ["E2", "F5"],
+      "monophonic": true
+    },
+    {
+      "id": "tuba",
+      "name": "Tuba",
+      "family": "brass",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": null,
+      "range": ["D1", "F4"],
+      "monophonic": true
+    },
+    {
+      "id": "timpani",
+      "name": "Timbales",
+      "family": "percussion",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": null,
+      "range": ["D2", "C4"],
+      "monophonic": false
+    },
+    {
+      "id": "drums",
+      "name": "Batería",
+      "family": "percussion",
+      "modes": ["rock"],
+      "clef": "percussion",
+      "transposition": null,
+      "range": ["B1", "A5"],
+      "monophonic": false
+    },
+    {
+      "id": "harp",
+      "name": "Arpa",
+      "family": "keyboards",
+      "modes": ["orchestra"],
+      "clef": "grand",
+      "transposition": null,
+      "range": ["B0", "G#7"],
+      "monophonic": false
+    },
+    {
+      "id": "piano",
+      "name": "Piano",
+      "family": "keyboards",
+      "modes": ["rock", "orchestra"],
+      "clef": "grand",
+      "transposition": null,
+      "range": ["A0", "C8"],
+      "monophonic": false
+    },
+    {
+      "id": "vocals",
+      "name": "Voz",
+      "family": "vocals",
+      "modes": ["rock"],
+      "clef": "treble",
+      "transposition": null,
+      "range": ["E2", "C6"],
+      "monophonic": true
+    },
+    {
+      "id": "guitar",
+      "name": "Guitarra",
+      "family": "band",
+      "modes": ["rock"],
+      "clef": "treble",
+      "transposition": "P-8",
+      "range": ["E2", "E6"],
+      "monophonic": false
+    },
+    {
+      "id": "bass",
+      "name": "Bajo eléctrico",
+      "family": "band",
+      "modes": ["rock"],
+      "clef": "bass",
+      "transposition": "P-8",
+      "range": ["E1", "G4"],
+      "monophonic": true
+    },
+    {
+      "id": "violin",
+      "name": "Violín",
+      "family": "strings",
+      "modes": ["orchestra"],
+      "clef": "treble",
+      "transposition": null,
+      "range": ["G3", "A7"],
+      "monophonic": false
+    },
+    {
+      "id": "viola",
+      "name": "Viola",
+      "family": "strings",
+      "modes": ["orchestra"],
+      "clef": "alto",
+      "transposition": null,
+      "range": ["C3", "E6"],
+      "monophonic": false
+    },
+    {
+      "id": "cello",
+      "name": "Violonchelo",
+      "family": "strings",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": null,
+      "range": ["C2", "C6"],
+      "monophonic": false
+    },
+    {
+      "id": "contrabass",
+      "name": "Contrabajo",
+      "family": "strings",
+      "modes": ["orchestra"],
+      "clef": "bass",
+      "transposition": "P-8",
+      "range": ["E1", "G4"],
+      "monophonic": false
+    }
+  ],
+  "families": [
+    {
+      "id": "woodwinds",
+      "name": "Maderas"
+    },
+    {
+      "id": "brass",
+      "name": "Metales"
+    },
+    {
+      "id": "percussion",
+      "name": "Percusión"
+    },
+    {
+      "id": "keyboards",
+      "name": "Teclados y arpa"
+    },
+    {
+      "id": "vocals",
+      "name": "Voz"
+    },
+    {
+      "id": "band",
+      "name": "Banda"
+    },
+    {
+      "id": "strings",
+      "name": "Cuerdas"
+    }
+  ],
+  "modes": [
+    {
+      "id": "auto",
+      "name": "Automático"
+    },
+    {
+      "id": "rock",
+      "name": "Rock / banda"
+    },
+    {
+      "id": "orchestra",
+      "name": "Orquesta"
+    }
+  ],
+  "defaults": {
+    "rock": ["vocals", "guitar", "bass", "piano", "drums"],
+    "orchestra": [
+      "flute",
+      "oboe",
+      "clarinet",
+      "bassoon",
+      "horn",
+      "trumpet",
+      "trombone",
+      "tuba",
+      "violin",
+      "viola",
+      "cello",
+      "contrabass"
+    ]
+  },
+  "limits": {
+    "maxDurationSec": 90,
+    "maxUploadBytes": 26214400,
+    "contentTypes": [
+      "audio/wav",
+      "audio/x-wav",
+      "audio/wave",
+      "audio/mpeg",
+      "audio/flac",
+      "audio/ogg",
+      "audio/mp4"
+    ]
+  },
+  "quantizations": ["1/8", "1/16", "1/32"]
+}

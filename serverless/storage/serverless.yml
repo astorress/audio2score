@@ -1,0 +1,64 @@
+# Shared storage of every job: the files bucket (uploads, worker requests,
+# results, async outputs; everything deleted after 1 day), the jobs table
+# (TTL 24 h), the SNS topics of the async endpoint and the notifications
+# topic + monthly AWS budget. Deploy first: the other stacks read it via SSM.
+service: storage
+frameworkVersion: ^4.43.0
+configValidationMode: error
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  stackName: ${self:custom.app}-${self:service}
+  deploymentBucket:
+    name: ${self:custom.s3.deploymentBucketName.${self:custom.stage}}
+
+resources:
+  - ${file(s3.yml)}
+  - ${file(dynamodb.yml)}
+  - ${file(sns.yml)}
+  - ${file(budget.yml)}
+  - ${file(ssm.yml)}
+  - ${file(cfn-collisions.yml)}
+
+plugins:
+  - serverless-deployment-bucket
+  - '@serverless/safeguards-plugin'
+
+custom:
+  org: ${env:ORG}
+  app: audio2score
+  stage: ${opt:stage, self:provider.stage}
+  safeguards:
+    - safeguard: framework-version
+      enforcementLevel: warning
+      config: ${self:frameworkVersion}
+    - safeguard: allowed-regions
+      enforcementLevel: error
+      config:
+        - ${self:provider.region}
+    - safeguard: no-wild-iam-role-statements
+      enforcementLevel: warning
+    - safeguard: allowed-stages
+      enforcementLevel: error
+      config:
+        - dev
+        - test
+        - prod
+  servicePrefix: ${self:custom.app}-${self:service}
+  developer: ${env:DEVELOPER}
+  notificationEmail: ${env:NOTIFICATION_EMAIL}
+  # Monthly cost guard rail (USD): emails at 80 % actual and 100 % forecast.
+  budgetUsd:
+    dev: 30
+    test: 30
+    prod: 60
+  # Files live 1 day (S3 expiration runs once a day, so up to ~48 h).
+  retentionDays: 1
+  s3:
+    filesBucketName: ${self:custom.app}-files-${aws:accountId}
+    deploymentBucketName:
+      dev: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.${self:custom.developer}.deploys
+      test: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys
+      prod: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys

@@ -1,0 +1,71 @@
+{
+  "name": "audio2score",
+  "dockerComposeFile": [".docker/docker-compose.yml"],
+  "service": "audio2score",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "aaron-bond.better-comments",
+        "davidanson.vscode-markdownlint",
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "eeyore.yapf",
+        "esbenp.prettier-vscode",
+        "irongeek.vscode-env",
+        "micnil.vscode-checkpoints",
+        "ms-azuretools.vscode-docker",
+        "ms-python.isort",
+        "ms-python.pylint",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "ms-vscode.live-server",
+        "threadheap.serverless-ide-vscode",
+        "vue.volar",
+        "yzhang.markdown-all-in-one"
+      ],
+      "settings": {
+        "editor.codeActionsOnSave": {
+          "source.fixAll.markdownlint": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.insertSpaces": true,
+        "git.autoRepositoryDetection": true,
+        "git.openRepositoryInParentFolders": "always",
+        "json.format.enable": true,
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[markdown]": {
+          "editor.formatOnSave": true,
+          "editor.formatOnPaste": true
+        },
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.extraPaths": ["."],
+        "python.testing.pytestEnabled": true,
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "[python]": {
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          },
+          "editor.formatOnSaveMode": "file",
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "eeyore.yapf"
+        },
+        "serverlessIDE.cfnLint.path": "/usr/local/bin/cfn-lint",
+        "serverlessIDE.cfnLint.appendRules": ["cfn_lint_serverless.rules"],
+        "serverlessIDE.completion": true,
+        "serverlessIDE.hover": true,
+        "serverlessIDE.telemetry.enableTelemetry": false,
+        "serverlessIDE.validate": true,
+        "serverlessIDE.validationProvider": "cfn-lint",
+        "yapf.interpreter": ["/usr/local/bin/python"]
+      }
+    }
+  },
+  "postCreateCommand": "chmod +x .docker/entrypoint.sh && .docker/entrypoint.sh",
+  "forwardPorts": [8000, 5173, 8888]
+}

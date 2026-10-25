@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Environment
+.envs/*
+!.envs/.gitignore
+!.envs/*.example
+
+*.serverless
+.serverless/
+*.vscode
+*.DS_Store
+tmp
+
+# Local data and outputs (audio with copyright, stems, models)
+/data/*
+!/data/.gitignore
+/outputs/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+coverage/
+htmlcov/
+.coverage
+.venv/

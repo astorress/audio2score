@@ -1,0 +1,127 @@
+ListInstruments:
+  name: ${self:custom.servicePrefix}-ListInstruments
+  description: GET /instruments → instrument catalog, modes and limits
+  handler: src/functions/jobs/list_instruments.handler
+  package:
+    patterns:
+      - ../../src/__init__.py
+      - ../../src/contract/*.py
+      - ../../src/functions/__init__.py
+      - ../../src/functions/jobs/__init__.py
+      - ../../src/functions/jobs/list_instruments.py
+      - ../../src/utilities/*.py
+  role: !GetAtt ListInstrumentsRole.Arn
+  timeout: 5
+  memorySize: 128
+  events:
+    - httpApi:
+        method: GET
+        path: /instruments
+
+CreateJob:
+  name: ${self:custom.servicePrefix}-CreateJob
+  description: POST /jobs → job (PENDING) + presigned POST to upload the audio
+  handler: src/functions/jobs/create_job.handler
+  package:
+    patterns:
+      - ../../src/__init__.py
+      - ../../src/contract/*.py
+      - ../../src/functions/__init__.py
+      - ../../src/functions/jobs/__init__.py
+      - ../../src/functions/jobs/create_job.py
+      - ../../src/services/__init__.py
+      - ../../src/services/dynamodb.py
+      - ../../src/services/s3.py
+      - ../../src/utilities/*.py
+  role: !GetAtt CreateJobRole.Arn
+  timeout: 10
+  memorySize: 256
+  environment:
+    DAILY_QUOTA: '${self:custom.quota.jobsPerIpPerDay.${self:custom.stage}}'
+    JOB_TTL_HOURS: '24'
+    UPLOAD_EXPIRES_SEC: '600'
+  events:
+    - httpApi:
+        method: POST
+        path: /jobs
+
+GetJob:
+  name: ${self:custom.servicePrefix}-GetJob
+  description: GET /jobs/{jobId} → status, stages and presigned result URLs
+  handler: src/functions/jobs/get_job.handler
+  package:
+    patterns:
+      - ../../src/__init__.py
+      - ../../src/contract/*.py
+      - ../../src/functions/__init__.py
+      - ../../src/functions/jobs/__init__.py
+      - ../../src/functions/jobs/get_job.py
+      - ../../src/services/__init__.py
+      - ../../src/services/dynamodb.py
+      - ../../src/services/s3.py
+      - ../../src/utilities/*.py
+  role: !GetAtt GetJobRole.Arn
+  timeout: 10
+  memorySize: 256
+  environment:
+    URL_EXPIRES_SEC: '3600'
+  events:
+    - httpApi:
+        method: GET
+        path: /jobs/{jobId}
+
+Dispatch:
+  name: ${self:custom.servicePrefix}-Dispatch
+  description: Audio uploaded → worker request + SageMaker async invocation
+  handler: src/functions/jobs/dispatch.handler
+  package:
+    patterns:
+      - ../../src/__init__.py
+      - ../../src/contract/*.py
+      - ../../src/functions/__init__.py
+      - ../../src/functions/jobs/__init__.py
+      - ../../src/functions/jobs/dispatch.py
+      - ../../src/services/__init__.py
+      - ../../src/services/dynamodb.py
+      - ../../src/services/s3.py
+      - ../../src/services/sagemaker_runtime.py
+      - ../../src/utilities/*.py
+  role: !GetAtt DispatchRole.Arn
+  timeout: 30
+  memorySize: 256
+  maximumRetryAttempts: 1
+  environment:
+    ENDPOINT_NAME: ${self:custom.endpointName}
+    INVOCATION_TIMEOUT_SEC: '${self:custom.invocationTimeoutSec}'
+  events:
+    - s3:
+        bucket: ${self:custom.s3.filesBucketName}
+        event: s3:ObjectCreated:*
+        existing: true
+        forceDeploy: true
+        rules:
+          - prefix: uploads/
+
+OnComplete:
+  name: ${self:custom.servicePrefix}-OnComplete
+  description: SageMaker async notification → job DONE / FAILED
+  handler: src/functions/jobs/on_complete.handler
+  package:
+    patterns:
+      - ../../src/__init__.py
+      - ../../src/contract/*.py
+      - ../../src/functions/__init__.py
+      - ../../src/functions/jobs/__init__.py
+      - ../../src/functions/jobs/on_complete.py
+      - ../../src/services/__init__.py
+      - ../../src/services/dynamodb.py
+      - ../../src/services/s3.py
+      - ../../src/utilities/*.py
+  role: !GetAtt OnCompleteRole.Arn
+  timeout: 30
+  memorySize: 256
+  events:
+    - sns:
+        arn: ${self:custom.sns.successTopicArn}
+    - sns:
+        arn: ${self:custom.sns.errorTopicArn}

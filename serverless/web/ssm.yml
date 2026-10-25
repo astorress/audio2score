@@ -1,0 +1,8 @@
+Resources:
+  WebUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/WebUrl
+      Tier: Standard
+      Type: String
+      Value: !Sub https://${WebDistribution.DomainName}

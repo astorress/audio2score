@@ -1,0 +1,45 @@
+Resources:
+  # Model and EndpointConfig are immutable and unnamed on purpose: a new
+  # image tag replaces them and the Endpoint switches over.
+  WorkerModel:
+    Type: AWS::SageMaker::Model
+    Properties:
+      ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
+      PrimaryContainer:
+        Image: ${self:custom.image.repositoryUri}:${self:custom.image.tag}
+        Environment:
+          JOBS_TABLE_NAME: ${self:custom.dynamodb.jobsTableName}
+          LOG_LEVEL: INFO
+          A2S_DEVICE: cuda
+      Tags:
+        - Key: ImageTag
+          Value: ${self:custom.image.tag}
+
+  WorkerEndpointConfig:
+    Type: AWS::SageMaker::EndpointConfig
+    Properties:
+      ProductionVariants:
+        - VariantName: AllTraffic
+          ModelName: !GetAtt WorkerModel.ModelName
+          InstanceType: ${self:custom.endpoint.instanceType}
+          # Async endpoints are created with one instance; autoscaling
+          # (MinCapacity 0) takes it down once the queue is empty.
+          InitialInstanceCount: 1
+          InitialVariantWeight: 1
+          ContainerStartupHealthCheckTimeoutInSeconds: ${self:custom.endpoint.startupTimeoutSec}
+      AsyncInferenceConfig:
+        ClientConfig:
+          # One job at a time per GPU (Demucs + Basic Pitch share 16 GB).
+          MaxConcurrentInvocationsPerInstance: 1
+        OutputConfig:
+          S3OutputPath: s3://${self:custom.s3.filesBucketName}/${self:custom.prefixes.asyncOutput}/
+          S3FailurePath: s3://${self:custom.s3.filesBucketName}/${self:custom.prefixes.asyncFailures}/
+          NotificationConfig:
+            SuccessTopic: ${self:custom.sns.successTopicArn}
+            ErrorTopic: ${self:custom.sns.errorTopicArn}
+
+  WorkerEndpoint:
+    Type: AWS::SageMaker::Endpoint
+    Properties:
+      EndpointName: ${self:custom.endpoint.name}
+      EndpointConfigName: !GetAtt WorkerEndpointConfig.EndpointConfigName

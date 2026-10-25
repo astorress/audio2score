@@ -1,0 +1,19 @@
+Resources:
+  # Items: JOB#<jobId> (job state) and QUOTA#<hashed ip>#<day> (daily
+  # counters). Both expire through `ttl`.
+  JobsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.app}-jobs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true

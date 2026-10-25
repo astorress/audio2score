@@ -1,0 +1,116 @@
+# Jobs API: HTTP API (public, throttled, per-IP daily quota) + Lambdas.
+#   GET  /instruments      ListInstruments
+#   POST /jobs             CreateJob   → presigned POST to uploads/
+#   GET  /jobs/{jobId}     GetJob      → status + presigned result URLs
+#   S3 uploads/*           Dispatch    → SageMaker async invocation
+#   SNS success / error    OnComplete  → job DONE / FAILED
+service: api
+frameworkVersion: ^4.43.0
+configValidationMode: error
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  runtime: python3.13
+  architecture: arm64
+  stackName: ${self:custom.app}-${self:service}
+  versionFunctions: false
+  deploymentBucket:
+    name: ${self:custom.s3.deploymentBucketName.${self:custom.stage}}
+  logRetentionInDays: ${self:custom.lambda.logRetentionInDays.${self:custom.stage}}
+  httpApi:
+    name: ${self:custom.servicePrefix}
+    # No cookies or credentials travel: the API is anonymous and protected
+    # by throttling + quota, so any origin may call it.
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      maxAge: 3600
+  environment:
+    LOG_LEVEL: INFO
+    JOBS_TABLE_NAME: ${self:custom.dynamodb.jobsTableName}
+    BUCKET_NAME: ${self:custom.s3.filesBucketName}
+
+package:
+  individually: true
+  patterns:
+    - '!./**'
+
+functions:
+  - ${file(functions.yml)}
+
+resources:
+  - ${file(iam.yml)}
+  - ${file(api.yml)}
+  - ${file(ssm.yml)}
+  - ${file(cfn-collisions.yml)}
+
+plugins:
+  - serverless-deployment-bucket
+  - '@serverless/safeguards-plugin'
+
+custom:
+  org: ${env:ORG}
+  app: audio2score
+  stage: ${opt:stage, self:provider.stage}
+  safeguards:
+    - safeguard: framework-version
+      enforcementLevel: warning
+      config: ${self:frameworkVersion}
+    - safeguard: allowed-regions
+      enforcementLevel: error
+      config:
+        - ${self:provider.region}
+    - safeguard: no-wild-iam-role-statements
+      enforcementLevel: warning
+    - safeguard: allowed-runtimes
+      config:
+        - ${self:provider.runtime}
+    - safeguard: allowed-function-names
+      enforcementLevel: warning
+      config: ${self:custom.servicePrefix}-${FUNCTION}
+    - safeguard: allowed-stages
+      enforcementLevel: error
+      config:
+        - dev
+        - test
+        - prod
+  servicePrefix: ${self:custom.app}-${self:service}
+  developer: ${env:DEVELOPER}
+  storageSsmPrefix: /${self:custom.app}-storage
+  endpointName: ${ssm:/${self:custom.app}-worker/EndpointName}
+  # Guard rails of the anonymous API (plan §9: GPU costs).
+  api:
+    throttlingRateLimit: 5
+    throttlingBurstLimit: 10
+  quota:
+    jobsPerIpPerDay:
+      dev: 50
+      test: 20
+      prod: 10
+  # Max time a job may run in the worker before SageMaker fails it.
+  invocationTimeoutSec: 1800
+  lambda:
+    logRetentionInDays:
+      dev: 1
+      test: 3
+      prod: 7
+  s3:
+    filesBucketName: ${ssm:${self:custom.storageSsmPrefix}/FilesBucketName}
+    deploymentBucketName:
+      dev: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.${self:custom.developer}.deploys
+      test: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys
+      prod: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys
+  dynamodb:
+    jobsTableName: ${ssm:${self:custom.storageSsmPrefix}/JobsTableName}
+    jobsTableArn: ${ssm:${self:custom.storageSsmPrefix}/JobsTableArn}
+  sns:
+    successTopicArn: ${ssm:${self:custom.storageSsmPrefix}/InferenceSuccessTopicArn}
+    errorTopicArn: ${ssm:${self:custom.storageSsmPrefix}/InferenceErrorTopicArn}

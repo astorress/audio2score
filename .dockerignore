@@ -1,0 +1,13 @@
+# Worker image build context (container/Dockerfile): only what it COPYs.
+*
+!container/requirements.txt
+!container/entrypoint.sh
+!container/download-models.py
+!src/__init__.py
+!src/contract/**/*.py
+!src/pipeline/**/*.py
+!src/serving/**/*.py
+!src/services/__init__.py
+!src/services/s3.py
+!src/services/dynamodb.py
+!src/utilities/**/*.py

@@ -1,0 +1,14 @@
+Resources:
+  ApiUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/ApiUrl
+      Tier: Standard
+      Type: String
+      Value: !Join
+        - ''
+        - - https://
+          - !Ref HttpApi
+          - .execute-api.
+          - !Ref AWS::Region
+          - .amazonaws.com

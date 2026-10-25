@@ -1,0 +1,62 @@
+Resources:
+  # Plan §10: the surprise cost is an instance that never scales in.
+  # Instance metrics only exist while an instance runs, so "CPU reported
+  # for 3 straight hours" means the endpoint didn't go back to zero.
+  WorkerNotScalingToZeroAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ${self:custom.servicePrefix}-NotScalingToZero
+      AlarmDescription: The GPU worker has been running for 3 hours — check the queue and the autoscaling policies
+      Namespace: /aws/sagemaker/Endpoints
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: EndpointName
+          Value: ${self:custom.endpoint.name}
+        - Name: VariantName
+          Value: AllTraffic
+      Statistic: SampleCount
+      Period: 3600
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - ${self:custom.sns.notificationsTopicArn}
+
+  WorkerBacklogStuckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ${self:custom.servicePrefix}-BacklogStuck
+      AlarmDescription: Jobs have been queued for 30 minutes — the worker isn't processing
+      Namespace: AWS/SageMaker
+      MetricName: ApproximateBacklogSize
+      Dimensions:
+        - Name: EndpointName
+          Value: ${self:custom.endpoint.name}
+      Statistic: Minimum
+      Period: 300
+      EvaluationPeriods: 6
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - ${self:custom.sns.notificationsTopicArn}
+
+  WorkerFailuresAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ${self:custom.servicePrefix}-InvocationFailures
+      AlarmDescription: Several jobs failed in the worker in the last hour
+      Namespace: AWS/SageMaker
+      MetricName: InvocationFailures
+      Dimensions:
+        - Name: EndpointName
+          Value: ${self:custom.endpoint.name}
+      Statistic: Sum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - ${self:custom.sns.notificationsTopicArn}

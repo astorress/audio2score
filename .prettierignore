@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Environment
+.envs
+
+# Build / data
+data
+outputs
+htmlcov
+notebooks
+
+# Formatted separately (yapf/isort, and web/ has its own prettier run)
+src
+tests
+web

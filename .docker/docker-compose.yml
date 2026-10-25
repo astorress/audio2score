@@ -1,0 +1,36 @@
+services:
+  audio2score:
+    container_name: 'Audio2Score'
+    build:
+      # Project folder: the image installs container/requirements.txt.
+      context: ..
+      dockerfile: .docker/Dockerfile
+      target: img-audio2score
+    ports:
+      # Local API (npm run local:api), Vite dev server (npm run web:dev) and
+      # JupyterLab (jupyter lab --ip 0.0.0.0), published on host 8889 because 8888 is
+      # commonly taken by other projects.
+      - 8000:8000
+      - 5173:5173
+      - 8889:8888
+    volumes:
+      - ..:/app
+      - audio2score-bashhistory:/commandhistory
+      # Model weights survive container rebuilds.
+      - audio2score-models:/home/audio2score/.cache
+      # Host Docker daemon: build/push the worker image (npm run image:push).
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - ../.envs/aws.env
+      - ../.envs/sls.env
+      - ../.envs/config.env
+    working_dir: /app
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -c
+      - sleep infinity
+
+volumes:
+  audio2score-bashhistory:
+  audio2score-models:

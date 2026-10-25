@@ -1,0 +1,10 @@
+# The API has no authentication (anonymous app, plan §12 question 4), so its
+# default stage is throttled: extra requests get HTTP 429 before reaching
+# the Lambdas. CreateJob adds a per-IP daily quota on top. HTTP APIs can't
+# be attached to AWS WAF; throttling + quota play that role.
+extensions:
+  HttpApiStage:
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingRateLimit: ${self:custom.api.throttlingRateLimit}
+        ThrottlingBurstLimit: ${self:custom.api.throttlingBurstLimit}

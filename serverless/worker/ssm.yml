@@ -1,0 +1,17 @@
+Resources:
+  EndpointNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/EndpointName
+      Tier: Standard
+      Type: String
+      Value: !GetAtt WorkerEndpoint.EndpointName
+
+  DeployedImageTagParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/DeployedImageTag
+      Description: Worker image currently served by the endpoint
+      Tier: Standard
+      Type: String
+      Value: ${self:custom.image.tag}

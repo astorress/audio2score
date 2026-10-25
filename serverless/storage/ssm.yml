@@ -1,0 +1,48 @@
+Resources:
+  FilesBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/FilesBucketName
+      Tier: Standard
+      Type: String
+      Value: !Ref FilesBucket
+
+  JobsTableNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/JobsTableName
+      Tier: Standard
+      Type: String
+      Value: !Ref JobsTable
+
+  JobsTableArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/JobsTableArn
+      Tier: Standard
+      Type: String
+      Value: !GetAtt JobsTable.Arn
+
+  InferenceSuccessTopicArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/InferenceSuccessTopicArn
+      Tier: Standard
+      Type: String
+      Value: !Ref InferenceSuccessTopic
+
+  InferenceErrorTopicArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/InferenceErrorTopicArn
+      Tier: Standard
+      Type: String
+      Value: !Ref InferenceErrorTopic
+
+  NotificationsTopicArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /${self:custom.servicePrefix}/NotificationsTopicArn
+      Tier: Standard
+      Type: String
+      Value: !Ref NotificationsTopic

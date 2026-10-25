@@ -1,0 +1,60 @@
+Resources:
+  WorkerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ${self:custom.servicePrefix}-Execution
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ${self:custom.servicePrefix}-Execution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${self:custom.image.repositoryName}
+              # Audio + request in, results and async outputs out.
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - arn:aws:s3:::${self:custom.s3.filesBucketName}/uploads/*
+                  - arn:aws:s3:::${self:custom.s3.filesBucketName}/requests/*
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource:
+                  - arn:aws:s3:::${self:custom.s3.filesBucketName}/results/*
+                  - arn:aws:s3:::${self:custom.s3.filesBucketName}/${self:custom.prefixes.asyncOutput}/*
+                  - arn:aws:s3:::${self:custom.s3.filesBucketName}/${self:custom.prefixes.asyncFailures}/*
+              # Progress (status / stage) of the running job.
+              - Effect: Allow
+                Action: dynamodb:UpdateItem
+                Resource: ${self:custom.dynamodb.jobsTableArn}
+              - Effect: Allow
+                Action: sns:Publish
+                Resource:
+                  - ${self:custom.sns.successTopicArn}
+                  - ${self:custom.sns.errorTopicArn}
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/sagemaker/*
+              - Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: /aws/sagemaker/Endpoints

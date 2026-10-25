@@ -1,0 +1,43 @@
+Resources:
+  # SageMaker async endpoint notifications → OnComplete Lambda.
+  InferenceSuccessTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:custom.app}-inference-success
+
+  InferenceErrorTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:custom.app}-inference-error
+
+  # Alarms and budget → the owner's email.
+  NotificationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ${self:custom.app}-notifications
+
+  NotificationsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref NotificationsTopic
+      Protocol: email
+      Endpoint: ${self:custom.notificationEmail}
+
+  NotificationsTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref NotificationsTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudwatch.amazonaws.com
+                - budgets.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref NotificationsTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId

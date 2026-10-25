@@ -1,0 +1,89 @@
+# GPU worker: SageMaker *asynchronous* endpoint running the worker image
+# (separation + transcription + engraving). Requests queue inside SageMaker,
+# results go to S3 and success/error notifications to SNS (→ OnComplete).
+# Autoscaling 0..N on the queue: with no jobs it scales to zero and costs
+# nothing; the first job after idle waits for a cold start (minutes).
+#
+# Redeploying after `npm run image:push` = a new worker version (Model and
+# EndpointConfig are replaced, the Endpoint is updated).
+service: worker
+frameworkVersion: ^4.43.0
+configValidationMode: error
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  stackName: ${self:custom.app}-${self:service}
+  deploymentBucket:
+    name: ${self:custom.s3.deploymentBucketName.${self:custom.stage}}
+
+resources:
+  - ${file(iam.yml)}
+  - ${file(sagemaker.yml)}
+  - ${file(autoscaling.yml)}
+  - ${file(alarms.yml)}
+  - ${file(ssm.yml)}
+  - ${file(cfn-collisions.yml)}
+
+plugins:
+  - serverless-deployment-bucket
+  - '@serverless/safeguards-plugin'
+
+custom:
+  org: ${env:ORG}
+  app: audio2score
+  stage: ${opt:stage, self:provider.stage}
+  safeguards:
+    - safeguard: framework-version
+      enforcementLevel: warning
+      config: ${self:frameworkVersion}
+    - safeguard: allowed-regions
+      enforcementLevel: error
+      config:
+        - ${self:provider.region}
+    - safeguard: no-wild-iam-role-statements
+      enforcementLevel: warning
+    - safeguard: allowed-stages
+      enforcementLevel: error
+      config:
+        - dev
+        - test
+        - prod
+  servicePrefix: ${self:custom.app}-${self:service}
+  developer: ${env:DEVELOPER}
+  storageSsmPrefix: /${self:custom.app}-storage
+  image:
+    repositoryName: ${ssm:/${self:custom.app}-image/RepositoryName}
+    repositoryUri: ${ssm:/${self:custom.app}-image/RepositoryUri}
+    # Content hash of the image; fails if it wasn't pushed (image:push).
+    tag: ${file(../../container/image-version.js)}
+  endpoint:
+    # Stable name: the Dispatch Lambda never changes when a new worker ships.
+    name: ${self:custom.app}-worker
+    # T4 16 GB: Demucs + Basic Pitch on a 90 s clip in ~1-2 min.
+    instanceType: ml.g4dn.xlarge
+    maxInstances:
+      dev: 1
+      test: 1
+      prod: 2
+    # Image pull (several GB) + model load before /ping answers.
+    startupTimeoutSec: 1200
+    # Scale in after this long with an empty queue.
+    scaleInCooldownSec: 600
+  prefixes:
+    asyncOutput: async-output
+    asyncFailures: async-failures
+  s3:
+    filesBucketName: ${ssm:${self:custom.storageSsmPrefix}/FilesBucketName}
+    deploymentBucketName:
+      dev: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.${self:custom.developer}.deploys
+      test: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys
+      prod: ${self:provider.region}.${self:custom.org}.${self:custom.app}.${self:custom.stage}.deploys
+  dynamodb:
+    jobsTableName: ${ssm:${self:custom.storageSsmPrefix}/JobsTableName}
+    jobsTableArn: ${ssm:${self:custom.storageSsmPrefix}/JobsTableArn}
+  sns:
+    successTopicArn: ${ssm:${self:custom.storageSsmPrefix}/InferenceSuccessTopicArn}
+    errorTopicArn: ${ssm:${self:custom.storageSsmPrefix}/InferenceErrorTopicArn}
+    notificationsTopicArn: ${ssm:${self:custom.storageSsmPrefix}/NotificationsTopicArn}

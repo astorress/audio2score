@@ -1,0 +1,66 @@
+# Scale-to-zero pattern for async endpoints (AWS docs, "Autoscale an
+# asynchronous endpoint"): target tracking on the queue per instance scales
+# in to 0, and a step policy on HasBacklogWithoutCapacity scales out from 0
+# (target tracking alone can't: with no instances there's no per-instance
+# metric).
+Resources:
+  WorkerScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: WorkerEndpoint
+    Properties:
+      ServiceNamespace: sagemaker
+      ResourceId: endpoint/${self:custom.endpoint.name}/variant/AllTraffic
+      ScalableDimension: sagemaker:variant:DesiredInstanceCount
+      MinCapacity: 0
+      MaxCapacity: ${self:custom.endpoint.maxInstances.${self:custom.stage}}
+
+  WorkerBacklogTrackingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: ${self:custom.servicePrefix}-BacklogPerInstance
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref WorkerScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 1
+        ScaleInCooldown: ${self:custom.endpoint.scaleInCooldownSec}
+        ScaleOutCooldown: 60
+        CustomizedMetricSpecification:
+          Namespace: AWS/SageMaker
+          MetricName: ApproximateBacklogSizePerInstance
+          Statistic: Average
+          Dimensions:
+            - Name: EndpointName
+              Value: ${self:custom.endpoint.name}
+
+  WorkerScaleFromZeroPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: ${self:custom.servicePrefix}-ScaleFromZero
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref WorkerScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        MetricAggregationType: Average
+        Cooldown: 300
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+
+  WorkerHasBacklogWithoutCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ${self:custom.servicePrefix}-HasBacklogWithoutCapacity
+      AlarmDescription: Jobs waiting and no worker instance → scale out from zero
+      Namespace: AWS/SageMaker
+      MetricName: HasBacklogWithoutCapacity
+      Dimensions:
+        - Name: EndpointName
+          Value: ${self:custom.endpoint.name}
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+      AlarmActions:
+        - !Ref WorkerScaleFromZeroPolicy
