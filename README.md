@@ -142,7 +142,7 @@ El orden es el mismo para `dev`, `test` y `prod`. Reemplaza `<stage>` en cada co
 1. `npm run deploy-storage:<stage>`: bucket de archivos, tabla de jobs, topics SNS y presupuesto. **Confirma el correo de suscripción SNS** que llega a `NOTIFICATION_EMAIL`.
 2. `npm run deploy-image:<stage>`: repositorio ECR.
 3. `npm run image:push`: construye la imagen del worker (linux/amd64, CUDA, pesos incluidos) y la sube. En Apple Silicon corre emulada: el primer build tarda bastante.
-4. `npm run deploy-worker:<stage>`: endpoint SageMaker asíncrono con autoescalado 0..N. Falla si el paso 3 no subió la imagen. Arranca con 1 instancia y baja a 0 a los ~10 min sin jobs.
+4. `npm run deploy-worker:<stage>`: endpoint SageMaker asíncrono con autoescalado 0..N. Falla si el paso 3 no subió la imagen. Arranca con 1 instancia y baja a 0 a los ~5 min sin jobs.
 5. `npm run deploy-api:<stage>`: HTTP API y Lambdas.
 6. `npm run deploy-web:<stage>`: construye `web/` con la URL de la API (SSM) y lo publica en CloudFront.
 
@@ -177,7 +177,7 @@ echo "$JOB" | jq -r '.upload.fields | to_entries[] | "-F \(.key)=\(.value)"' | x
 curl -s "$API/jobs/$(echo "$JOB" | jq -r .jobId)" | jq '{status, stage, stages}'
 ```
 
-**Costos:** fuera de uso, unos pocos USD al mes. Una `ml.g4dn.xlarge` cuesta del orden de 0,7 USD/h y solo corre mientras hay jobs, más ~10 min de enfriamiento. Las alarmas `NotScalingToZero` (3 h seguidas con una instancia) y el presupuesto mensual avisan por correo.
+**Costos:** fuera de uso, unos pocos USD al mes. Una `ml.g4dn.xlarge` cuesta del orden de 0,7 USD/h y solo corre mientras hay jobs, más ~5 min de enfriamiento. Las alarmas `NotScalingToZero` (3 h seguidas con una instancia) y el presupuesto mensual avisan por correo.
 
 ### Evaluación
 

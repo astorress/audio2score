@@ -66,11 +66,11 @@ custom:
     maxInstances:
       dev: 1
       test: 1
-      prod: 2
+      prod: 1
     # Image pull (several GB) + model load before /ping answers.
     startupTimeoutSec: 1200
     # Scale in after this long with an empty queue.
-    scaleInCooldownSec: 600
+    scaleInCooldownSec: 300
   prefixes:
     asyncOutput: async-output
     asyncFailures: async-failures

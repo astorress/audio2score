@@ -182,19 +182,19 @@ ejecuta `run()` informando cada etapa, sube **todos** los archivos de salida a `
 
 **Endpoint.** `ml.g4dn.xlarge` (T4, 16 GB), `MaxConcurrentInvocationsPerInstance = 1` (Demucs y Basic Pitch
 comparten la memoria de la GPU), tiempo de arranque hasta 1200 s, invocación máxima 1800 s. Máximo de
-instancias: `dev` 1, `test` 1, `prod` 2.
+instancias: `dev` 1, `test` 1, `prod` 1.
 
 **Autoescalado 0..N** sobre la cola de SageMaker:
 
 ```mermaid
 flowchart TD
-    Q[Cola del endpoint] -->|ApproximateBacklogSizePerInstance<br/>objetivo = 1| T[Target tracking<br/>escala hacia fuera 60 s<br/>hacia dentro tras 600 s]
+    Q[Cola del endpoint] -->|ApproximateBacklogSizePerInstance<br/>objetivo = 1| T[Target tracking<br/>escala hacia fuera 60 s<br/>hacia dentro tras 300 s]
     Q -->|HasBacklogWithoutCapacity ≥ 1| Z[Alarma → step policy<br/>+1 instancia desde cero]
     T --> I[Instancias 0..N]
     Z --> I
 ```
 
-- Un endpoint asíncrono nace con 1 instancia y el autoescalado lo baja a 0 tras ~10 min sin trabajo.
+- Un endpoint asíncrono nace con 1 instancia y el autoescalado lo baja a 0 tras ~5 min sin trabajo.
 - El target tracking no actúa con 0 instancias (la métrica por instancia no existe), por eso una **alarma
   sobre `HasBacklogWithoutCapacity`** activa una política de pasos que añade la primera instancia.
 - El primer job tras un periodo inactivo espera: _scale-out_ + descarga de la imagen (varios GB) + carga de
@@ -245,7 +245,7 @@ MIDI cuantizado), `PianoRoll` y `Downloads`. El catálogo (`stores/catalog.ts`) 
 | Presupuesto mensual               | `dev` 30 USD, `test` 30 USD, `prod` 60 USD               | correo                |
 
 Fuera de uso el costo son unos pocos USD al mes (DynamoDB bajo demanda, S3, Lambdas, CloudFront). La
-`ml.g4dn.xlarge` cuesta del orden de 0,7 USD/h y solo corre mientras hay jobs, más ~10 min de enfriamiento.
+`ml.g4dn.xlarge` cuesta del orden de 0,7 USD/h y solo corre mientras hay jobs, más ~5 min de enfriamiento.
 Los límites por stage están en `.claude/rules/environments.md`.
 
 ---

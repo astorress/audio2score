@@ -24,3 +24,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Notebooks 01–04 rewritten on real audio (Demucs SDR on 50 MUSDB excerpts, stems vs mix on bass/sax/piano/drums, orchestra baseline on 4 TRIOS trios); findings in `docs/resultados.md`
 - Fix: `transcription.basic_pitch()` clamps the requested range to A0–C8 (Basic Pitch silently returned no notes below A0)
 - Docs: `docs/matematicas.md` (mathematical formulation of every stage), rewritten `docs/pipeline.md`, `docs/api.md`, `docs/arquitectura.md` and `docs/modelos.md` from the code, and `docs/README.md` index
+- Worker: scale-in cooldown 600 s → 300 s and `prod` max instances 2 → 1 to cut GPU cost (docs and rules updated)

@@ -2,13 +2,13 @@
 
 |                             | dev | test | prod |
 | --------------------------- | --- | ---- | ---- |
-| Worker max instances        | 1   | 1    | 2    |
+| Worker max instances        | 1   | 1    | 1    |
 | Jobs per IP per day         | 50  | 20   | 10   |
 | Monthly budget (USD)        | 30  | 30   | 60   |
 | Lambda log retention (days) | 1   | 3    | 7    |
 | ECR images kept             | 3   | 3    | 5    |
 
-Common: `ml.g4dn.xlarge`, scale-in cooldown 600 s, API throttling 5 rps (burst 10), files deleted after
+Common: `ml.g4dn.xlarge`, scale-in cooldown 300 s, API throttling 5 rps (burst 10), files deleted after
 1 day, jobs after 24 h, invocation timeout 1800 s, clips up to 90 s / 25 MB.
 
 ## Variables
